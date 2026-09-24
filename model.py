@@ -157,8 +157,49 @@ def loocv_mse(estimator, X, y):
 
     return round(float(np.mean(mses)), 2)
 
-# Step 5 - cv_spread_by_k (not yet solved)
-# TODO: implement
+# Step 5 - cv_spread_by_k
+import numpy as np
+from sklearn.model_selection import KFold, LeaveOneOut, cross_val_score
+
+# Assuming cv_mse and loocv_mse are defined earlier (from the previous step)
+# def cv_mse(estimator, X, y, k=5, random_state=0): ...
+# def loocv_mse(estimator, X, y): ...
+
+
+def cv_spread_by_k(estimator, X, y, ks, seeds):
+    """
+    For each k, compute the k-fold MSE estimate across multiple seeds
+    and report the mean and standard deviation (ddof=1) over seeds.
+
+    Returns
+    -------
+    dict {k: (mean_over_seeds, std_over_seeds)} both rounded to 1 decimal.
+    """
+    result = {}
+    for k in ks:
+        estimates = []
+        for seed in seeds:
+            mean_mse, _ = cv_mse(estimator, X, y, k=k, random_state=seed)
+            estimates.append(mean_mse)
+        result[k] = (
+            round(float(np.mean(estimates)), 1),
+            round(float(np.std(estimates, ddof=1)), 1),
+        )
+    return result
+
+
+def compare_with_loocv(estimator, X, y, ks, seeds):
+    """
+    Compare LOOCV MSE against the k-fold spread across seeds.
+
+    Returns
+    -------
+    dict with 'loocv' (float) and 'kfold' (the spread dict from cv_spread_by_k).
+    """
+    return {
+        'loocv': loocv_mse(estimator, X, y),
+        'kfold': cv_spread_by_k(estimator, X, y, ks, seeds),
+    }
 
 # Step 6 - bootstrap_coefficients (not yet solved)
 # TODO: implement
