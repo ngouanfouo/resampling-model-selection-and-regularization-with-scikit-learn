@@ -530,8 +530,66 @@ def choose_penalty(make_model, X, y, values, cv):
 
     return value_min, value_1se
 
-# Step 12 - lasso_path (not yet solved)
-# TODO: implement
+# Step 12 - lasso_path
+import numpy as np
+from sklearn.linear_model import Lasso, LassoCV
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+
+
+def lasso_model(alpha):
+    """StandardScaler followed by Lasso(alpha)."""
+    return make_pipeline(
+        StandardScaler(),
+        Lasso(alpha=alpha, max_iter=20000),
+    )
+
+
+def lasso_path(X, y, alphas):
+    """
+    Fit a lasso pipeline for each alpha and stack the coefficient vectors.
+
+    Returns
+    -------
+    coefs : ndarray of shape (len(alphas), p)
+    """
+    coefs = []
+    for alpha in alphas:
+        model = lasso_model(alpha)
+        model.fit(X, y)
+        coefs.append(model.named_steps['lasso'].coef_)
+    return np.asarray(coefs)
+
+
+def nonzero_features(coef, names, tol=1e-8):
+    """
+    Return the names whose absolute coefficient exceeds tol, in input order.
+    """
+    coef = np.asarray(coef)
+    return [name for name, c in zip(names, coef) if abs(c) > tol]
+
+
+def lasso_cv(X, y, cv):
+    """
+    Fit StandardScaler + LassoCV and report the chosen alpha and selected features.
+
+    Returns
+    -------
+    (alpha, selected)
+        alpha    : LassoCV's alpha_ rounded to 4 decimals
+        selected : list of feature names with nonzero coefficients
+    """
+    model = make_pipeline(
+        StandardScaler(),
+        LassoCV(cv=cv, max_iter=20000, random_state=0),
+    )
+    model.fit(X, y)
+
+    lasso = model.named_steps['lassocv']
+    alpha = round(float(lasso.alpha_), 4)
+    selected = nonzero_features(lasso.coef_, list(X.columns))
+
+    return alpha, selected
 
 # Step 13 - pcr_model (not yet solved)
 # TODO: implement
