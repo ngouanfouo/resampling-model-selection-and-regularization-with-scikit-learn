@@ -25,7 +25,7 @@ python scaffold.py
 - [x] **13.** pcr_model
 - [x] **14.** pls_model
 - [x] **15.** fit_all
-- [ ] **16.** test_report
+- [x] **16.** test_report
 
 ---
 

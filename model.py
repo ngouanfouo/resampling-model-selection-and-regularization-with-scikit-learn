@@ -764,6 +764,59 @@ def fit_all(X, y, cv, alphas):
 
     return models
 
-# Step 16 - test_report (not yet solved)
-# TODO: implement
+# Step 16 - test_report
+import numpy as np
+from sklearn.metrics import mean_squared_error
+
+
+def test_report(models, X_test, y_test):
+    """
+    Evaluate every fitted model on the held-out test set.
+
+    Returns
+    -------
+    dict name -> {'rmse': float, 'n_features': int, 'setting': value}
+    """
+    report = {}
+
+    for name, (model, features, setting) in models.items():
+        # Predict on the exact feature subset the model was trained on
+        preds = np.asarray(model.predict(X_test[features])).ravel()
+        rmse = round(float(np.sqrt(mean_squared_error(y_test, preds))), 1)
+
+        # Count "features with a nonzero effect" per method
+        if name == 'lasso_cv':
+            coef = model.named_steps['lassocv'].coef_
+            n_features = int(np.sum(np.abs(coef) > 1e-8))
+        elif name == 'forward_1se':
+            n_features = len(features)  # the subset size
+        else:
+            n_features = len(features)
+
+        report[name] = {
+            'rmse': rmse,
+            'n_features': n_features,
+            'setting': setting,
+        }
+
+    return report
+
+
+def best_method(report):
+    """Name of the method with the smallest test RMSE."""
+    return min(report, key=lambda name: report[name]['rmse'])
+
+
+def format_table(report):
+    """
+    One formatted line per method, sorted by increasing RMSE:
+
+        f"{name:12s} rmse={rmse:6.1f} features={n:2d} setting={setting}"
+    """
+    ordered = sorted(report.items(), key=lambda kv: kv[1]['rmse'])
+    return [
+        f"{name:12s} rmse={info['rmse']:6.1f} "
+        f"features={info['n_features']:2d} setting={info['setting']}"
+        for name, info in ordered
+    ]
 
