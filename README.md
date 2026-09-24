@@ -23,7 +23,7 @@ python scaffold.py
 - [x] **11.** cv_curve
 - [x] **12.** lasso_path
 - [x] **13.** pcr_model
-- [ ] **14.** pls_model
+- [x] **14.** pls_model
 - [ ] **15.** fit_all
 - [ ] **16.** test_report
 

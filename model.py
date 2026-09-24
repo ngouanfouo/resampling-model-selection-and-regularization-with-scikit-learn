@@ -639,8 +639,66 @@ def pcr_curve(X, y, cv):
     means, ses = cv_curve(pcr_model, X, y, components, cv)
     return components, means, ses
 
-# Step 14 - pls_model (not yet solved)
-# TODO: implement
+# Step 14 - pls_model
+import numpy as np
+from sklearn.cross_decomposition import PLSRegression
+
+# cv_curve and one_se_rule are assumed defined from earlier steps.
+
+
+def pls_model(n_components):
+    """
+    PLSRegression with internal scaling (no separate StandardScaler needed).
+    """
+    return PLSRegression(n_components=n_components, scale=True)
+
+
+def pls_curve(X, y, cv):
+    """
+    Cross-validate PLS over 1..p components.
+
+    Returns
+    -------
+    (components, means, ses)
+        components : list [1, 2, ..., p]
+        means      : mean CV MSE per component count, rounded to 1 decimal
+        ses        : standard error per component count, rounded to 1 decimal
+    """
+    p = X.shape[1]
+    components = list(range(1, p + 1))
+    means, ses = cv_curve(pls_model, X, y, components, cv)
+    return components, means, ses
+
+
+def pls_predict(model, X):
+    """
+    Return PLSRegression predictions as a 1-D array.
+
+    PLSRegression.predict returns a 2-D column matrix of shape (n_samples, 1);
+    ravel() flattens it to the 1-D form the rest of the pipeline expects.
+    """
+    return np.asarray(model.predict(X)).ravel()
+
+
+def best_components(components, means, ses):
+    """
+    Pick the best component count and the one-SE-rule component count.
+
+    Returns
+    -------
+    (m_min, m_1se)
+        m_min : component count with the smallest mean CV MSE
+        m_1se : smallest component count within one SE of the best
+                (one-SE rule with prefer='smaller')
+    """
+    components = list(components)
+    means_arr = np.asarray(means, dtype=float)
+    i_min = int(np.argmin(means_arr))
+    m_min = components[i_min]
+
+    m_1se = one_se_rule(components, means, ses, prefer='smaller')
+
+    return m_min, m_1se
 
 # Step 15 - fit_all (not yet solved)
 # TODO: implement
