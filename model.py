@@ -26,8 +26,17 @@ def describe_data(X, y):
         'y_mean': round(float(y.mean()), 2),
     }
 
-# Step 2 - train_test (not yet solved)
-# TODO: implement
+# Step 2 - train_test
+from sklearn.model_selection import train_test_split
+
+
+def train_test(X, y, test_size=0.25, random_state=0):
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y,
+        test_size=test_size,
+        random_state=random_state,
+    )
+    return X_train, X_test, y_train, y_test
 
 # Step 3 - validation_set_curve (not yet solved)
 # TODO: implement
