@@ -15,7 +15,7 @@ python scaffold.py
 - [x] **3.** validation_set_curve
 - [x] **4.** cv_mse
 - [x] **5.** cv_spread_by_k
-- [ ] **6.** bootstrap_coefficients
+- [x] **6.** bootstrap_coefficients
 - [ ] **7.** stepwise_path
 - [ ] **8.** score_path
 - [ ] **9.** one_se_rule

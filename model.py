@@ -201,8 +201,82 @@ def compare_with_loocv(estimator, X, y, ks, seeds):
         'kfold': cv_spread_by_k(estimator, X, y, ks, seeds),
     }
 
-# Step 6 - bootstrap_coefficients (not yet solved)
-# TODO: implement
+# Step 6 - bootstrap_coefficients
+import numpy as np
+from sklearn.linear_model import LinearRegression
+
+
+def bootstrap_coefficients(X, y, n_boot=200, random_state=0):
+    """
+    Fit LinearRegression on n_boot bootstrap resamples of the rows.
+
+    Returns
+    -------
+    coefs : ndarray of shape (n_boot, p)
+        Each row is the coefficient vector from one bootstrap replicate.
+    """
+    X_arr = np.asarray(X, dtype=float)
+    y_arr = np.asarray(y, dtype=float)
+    n, p = X_arr.shape
+
+    rng = np.random.default_rng(random_state)
+    coefs = np.empty((n_boot, p), dtype=float)
+
+    for b in range(n_boot):
+        idx = rng.integers(0, n, n)
+        model = LinearRegression()
+        model.fit(X_arr[idx], y_arr[idx])
+        coefs[b] = model.coef_
+
+    return coefs
+
+
+def bootstrap_se(coefs):
+    """
+    Per-coefficient bootstrap standard error (std over replicates, ddof=1).
+
+    Returns
+    -------
+    ndarray of shape (p,) rounded to 2 decimals.
+    """
+    coefs = np.asarray(coefs, dtype=float)
+    se = np.std(coefs, axis=0, ddof=1)
+    return np.round(se, 2)
+
+
+def ols_standard_errors(X, y):
+    """
+    Textbook OLS standard errors for the slope coefficients.
+
+    Uses A = [1, X], sigma2 = RSS / (n - p - 1),
+    SE = sqrt(sigma2 * diag((A^T A)^-1)), dropping the intercept entry.
+
+    Returns
+    -------
+    ndarray of shape (p,) rounded to 2 decimals.
+    """
+    X_arr = np.asarray(X, dtype=float)
+    y_arr = np.asarray(y, dtype=float)
+    n, p = X_arr.shape
+
+    # Design matrix with intercept column
+    A = np.hstack([np.ones((n, 1)), X_arr])
+
+    # Fit via least squares
+    beta, *_ = np.linalg.lstsq(A, y_arr, rcond=None)
+
+    # Residuals and residual variance
+    residuals = y_arr - A @ beta
+    rss = float(residuals @ residuals)
+    sigma2 = rss / (n - p - 1)
+
+    # Covariance of beta_hat: sigma2 * (A^T A)^-1
+    AtA_inv = np.linalg.inv(A.T @ A)
+    var_beta = sigma2 * np.diag(AtA_inv)
+    se = np.sqrt(var_beta)
+
+    # Drop the intercept entry
+    return np.round(se[1:], 2)
 
 # Step 7 - stepwise_path (not yet solved)
 # TODO: implement
