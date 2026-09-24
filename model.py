@@ -113,8 +113,49 @@ def curve_spread(X, y, feature, degrees, seeds):
 
     return spread
 
-# Step 4 - cv_mse (not yet solved)
-# TODO: implement
+# Step 4 - cv_mse
+import numpy as np
+from sklearn.model_selection import KFold, LeaveOneOut, cross_val_score
+
+
+def cv_mse(estimator, X, y, k=5, random_state=0):
+    """
+    k-fold cross-validated MSE.
+
+    Returns
+    -------
+    (mean, se) : tuple of floats
+        mean of the fold MSEs, and the standard error
+        = std(fold MSEs, ddof=1) / sqrt(k),
+        both rounded to 2 decimals.
+    """
+    kf = KFold(n_splits=k, shuffle=True, random_state=random_state)
+    neg_mse = cross_val_score(estimator, X, y, cv=kf, scoring='neg_mean_squared_error')
+    mses = -neg_mse  # convert to positive MSEs
+
+    mean = float(np.mean(mses))
+    se = float(np.std(mses, ddof=1) / np.sqrt(k))
+
+    return round(mean, 2), round(se, 2)
+
+
+def loocv_mse(estimator, X, y):
+    """
+    Leave-one-out cross-validated MSE.
+
+    Each fold holds out a single sample, so the cross-validated score
+    with 'neg_mean_squared_error' gives the per-point squared error.
+    The mean over all points is the LOOCV MSE.
+
+    Returns
+    -------
+    float rounded to 2 decimals.
+    """
+    loo = LeaveOneOut()
+    neg_mse = cross_val_score(estimator, X, y, cv=loo, scoring='neg_mean_squared_error')
+    mses = -neg_mse  # squared errors, one per held-out point
+
+    return round(float(np.mean(mses)), 2)
 
 # Step 5 - cv_spread_by_k (not yet solved)
 # TODO: implement
