@@ -12,7 +12,7 @@ python scaffold.py
 
 - [x] **1.** load_data
 - [x] **2.** train_test
-- [ ] **3.** validation_set_curve
+- [x] **3.** validation_set_curve
 - [ ] **4.** cv_mse
 - [ ] **5.** cv_spread_by_k
 - [ ] **6.** bootstrap_coefficients
