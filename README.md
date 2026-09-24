@@ -17,7 +17,7 @@ python scaffold.py
 - [x] **5.** cv_spread_by_k
 - [x] **6.** bootstrap_coefficients
 - [x] **7.** stepwise_path
-- [ ] **8.** score_path
+- [x] **8.** score_path
 - [ ] **9.** one_se_rule
 - [ ] **10.** ridge_path
 - [ ] **11.** cv_curve

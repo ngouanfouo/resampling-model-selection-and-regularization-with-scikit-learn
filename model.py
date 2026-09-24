@@ -329,8 +329,58 @@ def stepwise_path(X, y, direction, cv):
     path[p] = list(X.columns)
     return path
 
-# Step 8 - score_path (not yet solved)
-# TODO: implement
+# Step 8 - score_path
+import numpy as np
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import cross_val_score
+
+
+def score_path(X, y, path, cv):
+    """
+    Cross-validate LinearRegression on each subset along the path.
+
+    Parameters
+    ----------
+    X : DataFrame
+    y : Series
+    path : dict {k: list of feature names}
+    cv : cross-validation splitter (e.g. KFold)
+
+    Returns
+    -------
+    (sizes, means, ses) : three lists in increasing k
+        sizes : list of subset sizes
+        means : mean cross-validated MSE per size, rounded to 1 decimal
+        ses   : standard error = std(ddof=1) / sqrt(n_folds), rounded to 1 decimal
+    """
+    sizes = sorted(path.keys())
+    means = []
+    ses = []
+
+    for k in sizes:
+        cols = path[k]
+        scores = cross_val_score(
+            LinearRegression(),
+            X[cols],
+            y,
+            cv=cv,
+            scoring='neg_mean_squared_error',
+        )
+        mses = -scores  # positive MSE per fold
+        n_folds = len(mses)
+
+        means.append(round(float(np.mean(mses)), 1))
+        ses.append(round(float(np.std(mses, ddof=1) / np.sqrt(n_folds)), 1))
+
+    return sizes, means, ses
+
+
+def best_size(sizes, means):
+    """
+    Return the subset size with the smallest mean cross-validated MSE.
+    """
+    i = int(np.argmin(means))
+    return sizes[i]
 
 # Step 9 - one_se_rule (not yet solved)
 # TODO: implement
