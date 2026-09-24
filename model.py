@@ -278,8 +278,56 @@ def ols_standard_errors(X, y):
     # Drop the intercept entry
     return np.round(se[1:], 2)
 
-# Step 7 - stepwise_path (not yet solved)
-# TODO: implement
+# Step 7 - stepwise_path
+from sklearn.feature_selection import SequentialFeatureSelector
+from sklearn.linear_model import LinearRegression
+
+
+def select_features(X, y, k, direction, cv):
+    """
+    Run SequentialFeatureSelector with LinearRegression and negative MSE scoring.
+
+    Parameters
+    ----------
+    X : DataFrame
+    y : Series
+    k : int, number of features to select
+    direction : 'forward' or 'backward'
+    cv : cross-validation splitter
+
+    Returns
+    -------
+    list of selected column names (in X.columns order).
+    """
+    selector = SequentialFeatureSelector(
+        LinearRegression(),
+        n_features_to_select=k,
+        direction=direction,
+        cv=cv,
+        scoring='neg_mean_squared_error',
+    )
+    selector.fit(X, y)
+    support = selector.get_support()
+    return list(X.columns[support])
+
+
+def stepwise_path(X, y, direction, cv):
+    """
+    Build the stepwise selection path for k = 1, ..., p.
+
+    SequentialFeatureSelector cannot select all p features, so k = p
+    is added manually as the full column list.
+
+    Returns
+    -------
+    dict {k: list of feature names}
+    """
+    p = X.shape[1]
+    path = {}
+    for k in range(1, p):
+        path[k] = select_features(X, y, k, direction, cv)
+    path[p] = list(X.columns)
+    return path
 
 # Step 8 - score_path (not yet solved)
 # TODO: implement
