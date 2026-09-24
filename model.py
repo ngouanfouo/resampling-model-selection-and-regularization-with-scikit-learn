@@ -471,8 +471,64 @@ def coef_norms(path):
     """
     return np.round(np.linalg.norm(path, axis=1), 2)
 
-# Step 11 - cv_curve (not yet solved)
-# TODO: implement
+# Step 11 - cv_curve
+import numpy as np
+from sklearn.model_selection import cross_val_score
+
+
+def cv_curve(make_model, X, y, values, cv):
+    """
+    Cross-validate a model builder over a grid of values.
+
+    Parameters
+    ----------
+    make_model : callable, value -> estimator
+    X, y : data
+    values : iterable of hyperparameter values
+    cv : cross-validation splitter
+
+    Returns
+    -------
+    (means, ses) : two lists rounded to 1 decimal
+        means : mean cross-validated MSE per value
+        ses   : standard error = std(ddof=1) / sqrt(n_folds) per value
+    """
+    means = []
+    ses = []
+
+    for value in values:
+        model = make_model(value)
+        scores = cross_val_score(
+            model, X, y, cv=cv, scoring='neg_mean_squared_error'
+        )
+        mses = -scores  # positive MSE per fold
+        n_folds = len(mses)
+
+        means.append(round(float(np.mean(mses)), 1))
+        ses.append(round(float(np.std(mses, ddof=1) / np.sqrt(n_folds)), 1))
+
+    return means, ses
+
+
+def choose_penalty(make_model, X, y, values, cv):
+    """
+    Choose a penalty using the one-SE rule, preferring larger values.
+
+    Returns
+    -------
+    (value_min, value_1se)
+        value_min : the value with the smallest mean CV MSE
+        value_1se : the largest value within one SE of the best
+    """
+    values = list(values)
+    means, ses = cv_curve(make_model, X, y, values, cv)
+
+    i_min = int(np.argmin(means))
+    value_min = values[i_min]
+
+    value_1se = one_se_rule(values, means, ses, prefer='larger')
+
+    return value_min, value_1se
 
 # Step 12 - lasso_path (not yet solved)
 # TODO: implement

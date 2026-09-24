@@ -20,7 +20,7 @@ python scaffold.py
 - [x] **8.** score_path
 - [x] **9.** one_se_rule
 - [x] **10.** ridge_path
-- [ ] **11.** cv_curve
+- [x] **11.** cv_curve
 - [ ] **12.** lasso_path
 - [ ] **13.** pcr_model
 - [ ] **14.** pls_model
