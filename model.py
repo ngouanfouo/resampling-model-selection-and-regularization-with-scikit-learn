@@ -700,8 +700,69 @@ def best_components(components, means, ses):
 
     return m_min, m_1se
 
-# Step 15 - fit_all (not yet solved)
-# TODO: implement
+# Step 15 - fit_all
+import numpy as np
+from sklearn.linear_model import LinearRegression, LassoCV
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+
+# Assumed available from earlier steps:
+# choose_subset(X, y, direction, cv) -> (size_min, size_1se, features_1se)
+# choose_penalty(make_model, X, y, values, cv) -> (value_min, value_1se)
+# ridge_model(alpha), pcr_model(n), pls_model(n), pcr_curve, pls_curve, best_components
+
+def fit_all(X, y, cv, alphas):
+    """
+    Fit every method of the project at its cross-validated setting.
+
+    Returns
+    -------
+    dict name -> (fitted_model, features_used, setting)
+    """
+    models = {}
+    all_features = list(X.columns)
+
+    # 1. OLS on all features
+    ols = LinearRegression()
+    ols.fit(X, y)
+    models['ols'] = (ols, all_features, None)
+
+    # 2. Forward selection with the one-SE rule
+    _, size_1se, features_1se = choose_subset(X, y, 'forward', cv)
+    fwd = LinearRegression()
+    fwd.fit(X[features_1se], y)
+    models['forward_1se'] = (fwd, features_1se, size_1se)
+
+    # 3. Ridge with the one-SE alpha
+    _, alpha_1se = choose_penalty(ridge_model, X, y, alphas, cv)
+    ridge = ridge_model(alpha_1se)
+    ridge.fit(X, y)
+    models['ridge_1se'] = (ridge, all_features, alpha_1se)
+
+    # 4. LassoCV pipeline
+    lasso_pipe = make_pipeline(
+        StandardScaler(),
+        LassoCV(cv=cv, max_iter=20000, random_state=0),
+    )
+    lasso_pipe.fit(X, y)
+    lasso_alpha = round(float(lasso_pipe.named_steps['lassocv'].alpha_), 4)
+    models['lasso_cv'] = (lasso_pipe, all_features, lasso_alpha)
+
+    # 5. PCR with the one-SE component count
+    pcr_comps, pcr_means, pcr_ses = pcr_curve(X, y, cv)
+    _, pcr_m_1se = best_components(pcr_comps, pcr_means, pcr_ses)
+    pcr = pcr_model(pcr_m_1se)
+    pcr.fit(X, y)
+    models['pcr_1se'] = (pcr, all_features, pcr_m_1se)
+
+    # 6. PLS with the one-SE component count
+    pls_comps, pls_means, pls_ses = pls_curve(X, y, cv)
+    _, pls_m_1se = best_components(pls_comps, pls_means, pls_ses)
+    pls = pls_model(pls_m_1se)
+    pls.fit(X, y)
+    models['pls_1se'] = (pls, all_features, pls_m_1se)
+
+    return models
 
 # Step 16 - test_report (not yet solved)
 # TODO: implement

@@ -24,7 +24,7 @@ python scaffold.py
 - [x] **12.** lasso_path
 - [x] **13.** pcr_model
 - [x] **14.** pls_model
-- [ ] **15.** fit_all
+- [x] **15.** fit_all
 - [ ] **16.** test_report
 
 ---
