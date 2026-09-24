@@ -382,8 +382,59 @@ def best_size(sizes, means):
     i = int(np.argmin(means))
     return sizes[i]
 
-# Step 9 - one_se_rule (not yet solved)
-# TODO: implement
+# Step 9 - one_se_rule
+import numpy as np
+
+
+def one_se_rule(values, means, ses, prefer='smaller'):
+    """
+    Apply the one-standard-error rule.
+
+    Find the index i_min of the smallest mean, set
+        threshold = means[i_min] + ses[i_min],
+    and among all values whose mean is at most the threshold, return
+    the smallest value if prefer='smaller', else the largest.
+
+    Parameters
+    ----------
+    values : list-like of candidate values (e.g. subset sizes or penalties)
+    means  : list-like of mean CV scores, aligned with values
+    ses    : list-like of standard errors, aligned with values
+    prefer : 'smaller' or 'larger' — which direction is considered simpler
+
+    Returns
+    -------
+    The chosen value.
+    """
+    values = list(values)
+    means = np.asarray(means, dtype=float)
+    ses = np.asarray(ses, dtype=float)
+
+    i_min = int(np.argmin(means))
+    threshold = means[i_min] + ses[i_min]
+
+    candidates = [values[i] for i in range(len(values)) if means[i] <= threshold]
+
+    return min(candidates) if prefer == 'smaller' else max(candidates)
+
+
+def choose_subset(X, y, direction, cv):
+    """
+    Run the stepwise path, score it, and report both the raw best size
+    and the one-SE-rule size (preferring smaller).
+
+    Returns
+    -------
+    (size_min, size_1se, features_1se)
+    """
+    path = stepwise_path(X, y, direction, cv)
+    sizes, means, ses = score_path(X, y, path, cv)
+
+    size_min = best_size(sizes, means)
+    size_1se = one_se_rule(sizes, means, ses, prefer='smaller')
+    features_1se = path[size_1se]
+
+    return size_min, size_1se, features_1se
 
 # Step 10 - ridge_path (not yet solved)
 # TODO: implement
